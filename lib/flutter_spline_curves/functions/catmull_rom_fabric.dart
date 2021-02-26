@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:flutter_spline_curves/flutter_spline_curves/functions/interpolated_function.dart';
+import 'interpolated_function.dart';
 import 'generic_function.dart';
 import '../point2d.dart';
 

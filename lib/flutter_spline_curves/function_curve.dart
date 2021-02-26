@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
-import 'package:flutter_spline_curves/flutter_spline_curves/functions/generic_function.dart';
+
+import 'functions/generic_function.dart';
 
 class FunctionCurve extends Curve {
   FunctionCurve(this.function);

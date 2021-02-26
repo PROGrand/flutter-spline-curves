@@ -1,7 +1,6 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'function_curve.dart';
 import 'functions/interpolated_function_base.dart';
-import 'functions/interpolated_function.dart';
 import 'curve_painter.dart';
 import 'point2d.dart';
 
@@ -99,37 +98,7 @@ class _CurveEditorState extends State<CurveEditor> {
                 top: constraints.maxHeight -
                     point.y * constraints.maxHeight -
                     widget.pointWidgetSize / 2,
-                child: GestureDetector(
-                  onPanUpdate: (details) {
-                    setState(() {
-                      var dx = isFixed ? 0 : details.delta.dx;
-                      var dy = details.delta.dy;
-
-                      var newX = (point.x * constraints.maxWidth + dx) /
-                          constraints.maxWidth;
-
-                      var newY = (point.y * constraints.maxHeight - dy) /
-                          constraints.maxHeight;
-
-                      if (-widget.pointWidgetSize / 2 <= newX &&
-                          newX <= 1 + widget.pointWidgetSize / 2 &&
-                          0 <= newY &&
-                          newY <= 1) {
-                        point.setLocation(newX, newY);
-                        updatePoints();
-                      }
-                    });
-                  },
-                  onTap: () {
-                    print('tap');
-                  },
-                  child: Container(
-                      width: widget.pointWidgetSize,
-                      height: widget.pointWidgetSize,
-                      child: isFixed
-                          ? widget.startingPointWidget
-                          : widget.pointWidget),
-                )));
+                child: buildGestureDetector(isFixed, point, constraints)));
           }
 
           // add gesture detector for adding new points
@@ -212,8 +181,85 @@ class _CurveEditorState extends State<CurveEditor> {
         }));
   }
 
+  Widget buildGestureDetector(
+      bool isFixed, Point2D point, BoxConstraints constraints) {
+    return RawGestureDetector(
+      child: Container(
+          width: widget.pointWidgetSize,
+          height: widget.pointWidgetSize,
+          child: isFixed ? widget.startingPointWidget : widget.pointWidget),
+      gestures: <Type, GestureRecognizerFactory>{
+        CustomPanGestureRecognizer:
+            GestureRecognizerFactoryWithHandlers<CustomPanGestureRecognizer>(
+          () => CustomPanGestureRecognizer(
+              onPanDown: (details) => true,
+              onPanUpdate: (details) {
+                setState(() {
+                  var dx = isFixed ? 0 : details.delta.dx;
+                  var dy = details.delta.dy;
+
+                  var newX = (point.x * constraints.maxWidth + dx) /
+                      constraints.maxWidth;
+
+                  var newY = (point.y * constraints.maxHeight - dy) /
+                      constraints.maxHeight;
+
+                  if (-widget.pointWidgetSize / 2 <= newX &&
+                      newX <= 1 + widget.pointWidgetSize / 2 &&
+                      0 <= newY &&
+                      newY <= 1) {
+                    point.setLocation(newX, newY);
+                    updatePoints();
+                  }
+                });
+              },
+              onPanEnd: (details) {}),
+          (CustomPanGestureRecognizer instance) {},
+        ),
+      },
+    );
+  }
+
   void updatePoints() {
     curveHolder.update(points);
     painter.updatePoints(points);
   }
+}
+
+class CustomPanGestureRecognizer extends OneSequenceGestureRecognizer {
+  final Function onPanDown;
+  final Function onPanUpdate;
+  final Function onPanEnd;
+
+  CustomPanGestureRecognizer(
+      {@required this.onPanDown,
+      @required this.onPanUpdate,
+      @required this.onPanEnd});
+
+  @override
+  void addPointer(PointerEvent event) {
+    if (onPanDown(event)) {
+      startTrackingPointer(event.pointer);
+      resolve(GestureDisposition.accepted);
+    } else {
+      stopTrackingPointer(event.pointer);
+    }
+  }
+
+  @override
+  void handleEvent(PointerEvent event) {
+    if (event is PointerMoveEvent) {
+      onPanUpdate(event);
+    }
+    if (event is PointerUpEvent) {
+      onPanEnd(event);
+      stopTrackingPointer(event.pointer);
+    }
+  }
+
+  @override
+  String get debugDescription => 'customPan';
+
+  @override
+  void didStopTrackingLastPointer(int pointer) {}
 }

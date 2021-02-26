@@ -5,7 +5,6 @@ import 'package:flutter_spline_curves/flutter_spline_curves/functions/catmull_ro
 import 'package:flutter_spline_curves/flutter_spline_curves/curve_editor.dart';
 import 'package:flutter_spline_curves/flutter_spline_curves/functions/integrated_inverted_function_fabric.dart';
 import 'package:flutter_spline_curves/flutter_spline_curves/functions/interpolated_function.dart';
-import 'package:flutter_spline_curves/flutter_spline_curves/functions/interpolated_function_base.dart';
 import 'package:flutter_spline_curves/flutter_spline_curves/point2d.dart';
 import 'package:flutter_spline_curves/flutter_spline_curves/progress_curve_holder.dart';
 
@@ -32,6 +31,8 @@ class MyHomePage extends StatefulWidget {
   @override
   _MyHomePageState createState() => _MyHomePageState();
 }
+
+const animationDuration = Duration(seconds: 5);
 
 class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   _MyHomePageState() {
@@ -76,7 +77,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     _targetController =
-        AnimationController(duration: Duration(seconds: 20), vsync: this);
+        AnimationController(duration: animationDuration, vsync: this);
 
     _targetAnimation = CurvedAnimation(
         parent: _targetController,
@@ -165,7 +166,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
   void startAnimation() {
     _targetController.reset();
-    _targetController.duration = Duration(seconds: 20);
+    _targetController.duration = animationDuration;
     _targetController.animateTo(1.0);
   }
 }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_spline_curves/flutter_spline_curves/functions/generic_function.dart';
+import 'functions/generic_function.dart';
 import 'functions/interpolated_function_base.dart';
 import 'functions/interpolated_function.dart';
 import 'curve_painter.dart';
