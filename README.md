@@ -1,7 +1,7 @@
 # flutter-spline-curves
 
 Flutter curves with editor.
-Allow to edit and use different kind of curves. Catmul-Rom and Monotonic Cubic splines are included.
+Allow to edit and use different kind of curves. Catmull-Rom and Monotonic Cubic splines are included.
 
 ## Demo
 
