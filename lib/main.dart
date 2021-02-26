@@ -57,8 +57,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
     curveEditor = CurveEditor(
         points: points,
-        curveHolder: holder,
-        fixedPoints: [startPoint, endPoint]);
+        curveHolder: holder);
 
     curve = FunctionCurve(holder.progressFunction);
 
@@ -139,8 +138,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           showDialog(
               context: context,
               builder: (BuildContext context) {
-                // get points from curveEditor
-                List<Point2D> points = curveEditor.points;
 
                 // get y values
                 String yValues = '';

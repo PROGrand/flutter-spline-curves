@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'functions/interpolated_function_base.dart';
@@ -7,8 +9,8 @@ import 'point2d.dart';
 final defaultPointWidget = ClipRRect(
   borderRadius: BorderRadius.circular(10.0),
   child: Container(
-    width: 20.0,
-    height: 20.0,
+    width: 30.0,
+    height: 30.0,
     color: Colors.blue,
   ),
 );
@@ -16,8 +18,8 @@ final defaultPointWidget = ClipRRect(
 final defaultStartingPointWidget = ClipRRect(
   borderRadius: BorderRadius.circular(10.0),
   child: Container(
-    width: 20.0,
-    height: 20.0,
+    width: 30.0,
+    height: 30.0,
     color: Colors.greenAccent,
   ),
 );
@@ -36,8 +38,7 @@ abstract class CurveHolder {
 
 class CurveEditor extends StatefulWidget {
   final CurveHolder curveHolder;
-  final List<Point2D> points;
-  final List<Point2D> fixedPoints;
+  final List<Point2D> _points;
   final Color curveColor;
   final double curveWidth;
   final Widget pointWidget;
@@ -47,37 +48,34 @@ class CurveEditor extends StatefulWidget {
   CurveEditor({
     Key key,
     @required this.curveHolder,
-    @required this.points,
-    List<Point2D> fixedPoints,
+    List<Point2D> points,
     this.curveColor = Colors.red,
     this.curveWidth = 3,
     Widget pointWidget,
     Widget startingPointWidget,
-    this.pointWidgetSize = 20,
+    this.pointWidgetSize = 30,
   })  : pointWidget = pointWidget ?? defaultPointWidget,
         startingPointWidget = startingPointWidget ?? defaultStartingPointWidget,
-        fixedPoints = List.unmodifiable(fixedPoints ?? []);
+        _points = points ?? [],
+        super(key: key);
 
   @override
   State<StatefulWidget> createState() {
-    return _CurveEditorState(curveHolder, points);
+    return CurveEditorState(curveHolder, _points);
   }
 }
 
-class _CurveEditorState extends State<CurveEditor> {
+class CurveEditorState extends State<CurveEditor> {
   List<Point2D> points;
   FunctionPainter painter;
   final CurveHolder curveHolder;
 
-  _CurveEditorState(this.curveHolder, List<Point2D> points) {
+  CurveEditorState(
+      this.curveHolder, List<Point2D> points) {
     this.points = points;
     this.painter = FunctionPainter(curveHolder.function, points: this.points);
   }
 
-  @override
-  void initState() {
-    super.initState();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -87,9 +85,9 @@ class _CurveEditorState extends State<CurveEditor> {
             builder: (BuildContext context, BoxConstraints constraints) {
           // add points
           var stackedWidgets = <Widget>[];
-          for (var point in points) {
-            var isFixed = -1 != widget.fixedPoints.indexOf(point);
 
+          var pointIndex = 0;
+          for (var point in points) {
             var xPosition =
                 point.x * constraints.maxWidth - widget.pointWidgetSize / 2;
 
@@ -98,7 +96,7 @@ class _CurveEditorState extends State<CurveEditor> {
                 top: constraints.maxHeight -
                     point.y * constraints.maxHeight -
                     widget.pointWidgetSize / 2,
-                child: buildGestureDetector(isFixed, point, constraints)));
+                child: buildGestureDetector(pointIndex++, constraints)));
           }
 
           // add gesture detector for adding new points
@@ -108,59 +106,11 @@ class _CurveEditorState extends State<CurveEditor> {
               Offset localOffset = getBox.globalToLocal(details.globalPosition);
 
               // only add if no point is within 4*r=2*pointWidgetSize
-              var canAdd = true;
               var pointTapped = false;
 
-              for (var point in points) {
-                var isFixed = -1 != widget.fixedPoints.indexOf(point);
-
-                var x =
-                    point.x * constraints.maxWidth - widget.pointWidgetSize / 2;
-                var y = point.y * constraints.maxHeight -
-                    widget.pointWidgetSize / 2;
-
-                if ((localOffset.dx - x).abs() < widget.pointWidgetSize * 2 &&
-                    (constraints.maxHeight - localOffset.dy - y).abs() <
-                        widget.pointWidgetSize * 2) {
-                  canAdd = false;
-
-                  // show remove dialog
-                  // if (!(point.x == 0 && point.y == 0) &&
-                  //     !(point.x == 1 && point.y == 1)) {
-                  if (!isFixed) {
-                    pointTapped = true;
-                    showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            title: new Text("Remove point?"),
-                            actions: <Widget>[
-                              new TextButton(
-                                child: new Text("Close"),
-                                onPressed: () => Navigator.of(context).pop(),
-                              ),
-                              new TextButton(
-                                child: new Text("Remove"),
-                                onPressed: () {
-                                  setState(() {
-                                    points.remove(point);
-                                    updatePoints();
-                                  });
-                                  Navigator.of(context).pop();
-                                },
-                              ),
-                            ],
-                          );
-                        });
-                  }
-
-                  break;
-                }
-              }
-
-              if (canAdd && points.length <= maxPoints) {
+              if (points.length <= maxPoints) {
                 setState(() {
-                  points.add(Point2D(
+                  points.insert(1, Point2D(
                       localOffset.dx / constraints.maxWidth,
                       (constraints.maxHeight - localOffset.dy) /
                           constraints.maxHeight));
@@ -182,12 +132,13 @@ class _CurveEditorState extends State<CurveEditor> {
   }
 
   Widget buildGestureDetector(
-      bool isFixed, Point2D point, BoxConstraints constraints) {
+      int pointIndex, BoxConstraints constraints) {
+
     return RawGestureDetector(
       child: Container(
           width: widget.pointWidgetSize,
           height: widget.pointWidgetSize,
-          child: isFixed ? widget.startingPointWidget : widget.pointWidget),
+          child: isFixed(pointIndex) ? widget.startingPointWidget : widget.pointWidget),
       gestures: <Type, GestureRecognizerFactory>{
         CustomPanGestureRecognizer:
             GestureRecognizerFactoryWithHandlers<CustomPanGestureRecognizer>(
@@ -195,7 +146,8 @@ class _CurveEditorState extends State<CurveEditor> {
               onPanDown: (details) => true,
               onPanUpdate: (details) {
                 setState(() {
-                  var dx = isFixed ? 0 : details.delta.dx;
+                  var point = points[pointIndex];
+                  var dx = isFixed(pointIndex) ? 0 : details.delta.dx;
                   var dy = details.delta.dy;
 
                   var newX = (point.x * constraints.maxWidth + dx) /
@@ -213,7 +165,34 @@ class _CurveEditorState extends State<CurveEditor> {
                   }
                 });
               },
-              onPanEnd: (details) {}),
+              onPanEnd: (details) {},
+              onTap: (details) {
+                if (!isFixed(pointIndex)) {
+                  showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: new Text("Remove point?"),
+                          actions: <Widget>[
+                            new TextButton(
+                              child: new Text("Close"),
+                              onPressed: () => Navigator.of(context).pop(),
+                            ),
+                            new TextButton(
+                              child: new Text("Remove"),
+                              onPressed: () {
+                                setState(() {
+                                  points.removeAt(pointIndex);
+                                  updatePoints();
+                                });
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ],
+                        );
+                      });
+                }
+              }),
           (CustomPanGestureRecognizer instance) {},
         ),
       },
@@ -224,21 +203,37 @@ class _CurveEditorState extends State<CurveEditor> {
     curveHolder.update(points);
     painter.updatePoints(points);
   }
+
+  void setup(List<Point2D> points) {
+    setState(() {
+      this.points = points;
+      updatePoints();
+    });
+  }
+
+  isFixed(int pointIndex) => 0 == pointIndex || points.length - 1 == pointIndex;
 }
 
 class CustomPanGestureRecognizer extends OneSequenceGestureRecognizer {
   final Function onPanDown;
   final Function onPanUpdate;
   final Function onPanEnd;
+  final Function onTap;
+  double len;
+
+  Offset _startPanPosition;
 
   CustomPanGestureRecognizer(
       {@required this.onPanDown,
       @required this.onPanUpdate,
-      @required this.onPanEnd});
+      @required this.onPanEnd,
+      @required this.onTap});
 
   @override
   void addPointer(PointerEvent event) {
     if (onPanDown(event)) {
+      len = 0;
+      _startPanPosition = event.position;
       startTrackingPointer(event.pointer);
       resolve(GestureDisposition.accepted);
     } else {
@@ -249,10 +244,17 @@ class CustomPanGestureRecognizer extends OneSequenceGestureRecognizer {
   @override
   void handleEvent(PointerEvent event) {
     if (event is PointerMoveEvent) {
+      var dx = event.position.dx - _startPanPosition.dx;
+      var dy = event.position.dy - _startPanPosition.dy;
+      len += sqrt(dx * dx + dy * dy);
       onPanUpdate(event);
     }
     if (event is PointerUpEvent) {
       onPanEnd(event);
+
+      if (len < 3) {
+        onTap(event);
+      }
       stopTrackingPointer(event.pointer);
     }
   }
