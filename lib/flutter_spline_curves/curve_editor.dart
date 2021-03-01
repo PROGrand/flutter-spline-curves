@@ -7,7 +7,7 @@ import 'curve_painter.dart';
 import 'point2d.dart';
 
 final defaultPointWidget = ClipRRect(
-  borderRadius: BorderRadius.circular(10.0),
+  borderRadius: BorderRadius.circular(15.0),
   child: Container(
     width: 30.0,
     height: 30.0,
@@ -16,7 +16,7 @@ final defaultPointWidget = ClipRRect(
 );
 
 final defaultStartingPointWidget = ClipRRect(
-  borderRadius: BorderRadius.circular(10.0),
+  borderRadius: BorderRadius.circular(15.0),
   child: Container(
     width: 30.0,
     height: 30.0,
@@ -24,7 +24,7 @@ final defaultStartingPointWidget = ClipRRect(
   ),
 );
 
-final maxPoints = 12;
+final maxPoints = 10;
 
 abstract class CurveHolder {
   CurveHolder(this.function);
@@ -44,6 +44,7 @@ class CurveEditor extends StatefulWidget {
   final Widget pointWidget;
   final Widget startingPointWidget;
   final double pointWidgetSize;
+  final Function onChanged;
 
   CurveEditor({
     Key key,
@@ -53,7 +54,7 @@ class CurveEditor extends StatefulWidget {
     this.curveWidth = 3,
     Widget pointWidget,
     Widget startingPointWidget,
-    this.pointWidgetSize = 30,
+    this.pointWidgetSize = 30, this.onChanged,
   })  : pointWidget = pointWidget ?? defaultPointWidget,
         startingPointWidget = startingPointWidget ?? defaultStartingPointWidget,
         _points = points ?? [],
@@ -61,7 +62,7 @@ class CurveEditor extends StatefulWidget {
 
   @override
   State<StatefulWidget> createState() {
-    return CurveEditorState(curveHolder, _points);
+    return CurveEditorState(curveHolder, _points, pointWidgetSize / 2);
   }
 }
 
@@ -69,12 +70,15 @@ class CurveEditorState extends State<CurveEditor> {
   List<Point2D> points;
   FunctionPainter painter;
   final CurveHolder curveHolder;
+  final double borderSize;
 
   CurveEditorState(
-      this.curveHolder, List<Point2D> points) {
+      this.curveHolder, List<Point2D> points, this.borderSize) {
     this.points = points;
-    this.painter = FunctionPainter(curveHolder.function, points: this.points);
+    this.painter = FunctionPainter(curveHolder.function, points: this.points, border: borderSize);
   }
+
+
 
 
   @override
@@ -89,13 +93,13 @@ class CurveEditorState extends State<CurveEditor> {
           var pointIndex = 0;
           for (var point in points) {
             var xPosition =
-                point.x * constraints.maxWidth - widget.pointWidgetSize / 2;
+                point.x * (constraints.maxWidth - 2 * borderSize) - widget.pointWidgetSize / 2 + borderSize;
 
             stackedWidgets.add(Positioned(
                 left: xPosition,
-                top: constraints.maxHeight -
-                    point.y * constraints.maxHeight -
-                    widget.pointWidgetSize / 2,
+                top: (constraints.maxHeight - 2 * borderSize) -
+                    point.y * (constraints.maxHeight - 2 * borderSize) -
+                    widget.pointWidgetSize / 2 +  borderSize,
                 child: buildGestureDetector(pointIndex++, constraints)));
           }
 
@@ -111,9 +115,9 @@ class CurveEditorState extends State<CurveEditor> {
               if (points.length <= maxPoints) {
                 setState(() {
                   points.insert(1, Point2D(
-                      localOffset.dx / constraints.maxWidth,
-                      (constraints.maxHeight - localOffset.dy) /
-                          constraints.maxHeight));
+                      (localOffset.dx - borderSize) / (constraints.maxWidth - 2 * borderSize),
+                      ((constraints.maxHeight - 2 * borderSize) - (localOffset.dy - borderSize)) /
+                          (constraints.maxHeight - 2 * borderSize)));
                   updatePoints();
                 });
               } else if (points.length >= maxPoints && !pointTapped) {
@@ -150,11 +154,11 @@ class CurveEditorState extends State<CurveEditor> {
                   var dx = isFixed(pointIndex) ? 0 : details.delta.dx;
                   var dy = details.delta.dy;
 
-                  var newX = (point.x * constraints.maxWidth + dx) /
-                      constraints.maxWidth;
+                  var newX = (point.x * (constraints.maxWidth - 2 * borderSize) + dx) /
+                      (constraints.maxWidth - 2 * borderSize);
 
-                  var newY = (point.y * constraints.maxHeight - dy) /
-                      constraints.maxHeight;
+                  var newY = (point.y * (constraints.maxHeight - 2 * borderSize) - dy) /
+                      (constraints.maxHeight - 2 * borderSize);
 
                   if (-widget.pointWidgetSize / 2 <= newX &&
                       newX <= 1 + widget.pointWidgetSize / 2 &&
@@ -202,6 +206,9 @@ class CurveEditorState extends State<CurveEditor> {
   void updatePoints() {
     curveHolder.update(points);
     painter.updatePoints(points);
+    if (null != widget.onChanged) {
+      widget.onChanged(points);
+    }
   }
 
   void setup(List<Point2D> points) {
