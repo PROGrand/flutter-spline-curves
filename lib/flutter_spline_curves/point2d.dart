@@ -1,6 +1,6 @@
 class Point2D {
-  double x;
-  double y;
+  late double x;
+  late double y;
 
   Point2D(double x, double y) {
     this.x = x;

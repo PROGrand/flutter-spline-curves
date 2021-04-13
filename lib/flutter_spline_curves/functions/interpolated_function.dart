@@ -14,7 +14,7 @@ class InterpolatedFunction extends InterpolatedFunctionBase {
       GeneralFunctionFabric functionFabric,
       {int steps = 100,
       this.monotonic = true,
-      @required List<Point2D> points,
+      required List<Point2D> points,
       bool clamped = true})
       : super(functionFabric, steps: steps, clamped: clamped) {
     update(points);

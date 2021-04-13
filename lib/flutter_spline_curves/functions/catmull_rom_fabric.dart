@@ -19,7 +19,7 @@ class CatmullRomSplinePointFabric extends GeneralFunctionFabric {
 
 class CatmullRomSplineFunction extends InterpolatedFunction {
   CatmullRomSplineFunction(List<Point2D> controlPoints,
-      {bool monotonic, bool clamped})
+      {bool monotonic: false, bool clamped: false})
       : super(CatmullRomSplinePointFabric(),
             points: controlPoints, monotonic: monotonic, clamped: clamped);
 }

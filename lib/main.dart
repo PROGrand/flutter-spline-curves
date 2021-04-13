@@ -24,7 +24,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+  MyHomePage({Key? key, this.title: ""}) : super(key: key);
 
   final String title;
 
@@ -64,13 +64,13 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     curvePreview = FunctionPreview(function: holder.progressFunction);
   }
 
-  List<Point2D> points;
-  InterpolatedFunction function;
-  CurveEditor curveEditor;
-  FunctionPreview curvePreview;
-  FunctionCurve curve;
-  AnimationController _targetController;
-  Animation<double> _targetAnimation;
+  late List<Point2D> points;
+  late InterpolatedFunction function;
+  late CurveEditor curveEditor;
+  late FunctionPreview curvePreview;
+  late FunctionCurve curve;
+  late AnimationController _targetController;
+  late Animation<double> _targetAnimation;
 
   @override
   void initState() {
@@ -94,7 +94,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         }
       });
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance?.addPostFrameCallback((_) {
       startAnimation();
     });
   }

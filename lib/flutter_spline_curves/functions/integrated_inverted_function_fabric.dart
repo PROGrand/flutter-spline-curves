@@ -23,8 +23,11 @@ class IntegratedInvertedFunctionFabric extends GeneralDoubleFunctionFabric {
 
 class IntegratedInvertedFunction extends InterpolatedFunction {
   IntegratedInvertedFunction(GeneralFunctionFabric functionFabric,
-      {List<Point2D> points, bool monotonic, bool clamped})
-      : super(functionFabric, points: points, monotonic: monotonic, clamped: clamped);
+      {required List<Point2D> points,
+      bool monotonic: false,
+      bool clamped: false})
+      : super(functionFabric,
+            points: points, monotonic: monotonic, clamped: clamped);
 
   void interpolate() {
     //var base = InterpolatedFunction(functionFabric, points: functionFabric.controlPoints, steps: steps);

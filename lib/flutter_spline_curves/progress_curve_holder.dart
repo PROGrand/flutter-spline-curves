@@ -4,7 +4,7 @@ import 'point2d.dart';
 
 class ProgressCurveHolder extends CurveHolder {
   ProgressCurveHolder(InterpolatedFunctionBase function,
-      {this.progressFunction})
+      {required this.progressFunction})
       : super(function);
 
   final InterpolatedFunctionBase progressFunction;

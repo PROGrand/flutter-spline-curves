@@ -17,14 +17,13 @@ final defaultPointWidget = ClipRRect(
 final maxPoints = 12;
 
 class FunctionPreview extends StatefulWidget {
-
   final GenericDoubleFunction function;
   final Color curveColor;
   final double curveWidth;
 
   FunctionPreview({
-    Key key,
-    @required this.function,
+    Key? key,
+    required this.function,
     this.curveColor = Colors.red,
     this.curveWidth = 3,
   });
@@ -36,7 +35,7 @@ class FunctionPreview extends StatefulWidget {
 }
 
 class _FunctionPreviewState extends State<FunctionPreview> {
-  FunctionPainter painter;
+  late FunctionPainter painter;
   final GenericDoubleFunction function;
 
   _FunctionPreviewState(this.function) {

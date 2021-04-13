@@ -16,7 +16,7 @@ abstract class GenericDoubleFunction {
 abstract class GeneralFunctionFabric {
   GenericFunction makeFunction();
 
-  List<Point2D> controlPoints;
+  List<Point2D> controlPoints = [];
 
   void setControlPoints(List<Point2D> controlPoints) {
     this.controlPoints = controlPoints;
@@ -26,7 +26,7 @@ abstract class GeneralFunctionFabric {
 abstract class GeneralDoubleFunctionFabric {
   GenericDoubleFunction makeFunction();
 
-  List<Point2D> controlPoints;
+  List<Point2D> controlPoints = [];
 
   void setControlPoints(List<Point2D> controlPoints) {
     this.controlPoints = controlPoints;

@@ -44,20 +44,21 @@ class CurveEditor extends StatefulWidget {
   final Widget pointWidget;
   final Widget startingPointWidget;
   final double pointWidgetSize;
-  final Function onChanged;
+  final Function? onChanged;
 
   CurveEditor({
-    Key key,
-    @required this.curveHolder,
-    List<Point2D> points,
+    Key? key,
+    required this.curveHolder,
+    List<Point2D>? points,
     this.curveColor = Colors.red,
     this.curveWidth = 3,
-    Widget pointWidget,
-    Widget startingPointWidget,
-    this.pointWidgetSize = 30, this.onChanged,
+    Widget? pointWidget,
+    Widget? startingPointWidget,
+    this.pointWidgetSize = 30,
+    this.onChanged,
   })  : pointWidget = pointWidget ?? defaultPointWidget,
         startingPointWidget = startingPointWidget ?? defaultStartingPointWidget,
-        _points = points ?? [],
+        _points = points ?? const <Point2D>[],
         super(key: key);
 
   @override
@@ -67,19 +68,16 @@ class CurveEditor extends StatefulWidget {
 }
 
 class CurveEditorState extends State<CurveEditor> {
-  List<Point2D> points;
-  FunctionPainter painter;
+  late List<Point2D> points;
+  late FunctionPainter painter;
   final CurveHolder curveHolder;
   final double borderSize;
 
-  CurveEditorState(
-      this.curveHolder, List<Point2D> points, this.borderSize) {
+  CurveEditorState(this.curveHolder, List<Point2D> points, this.borderSize) {
     this.points = points;
-    this.painter = FunctionPainter(curveHolder.function, points: this.points, border: borderSize);
+    this.painter = FunctionPainter(curveHolder.function,
+        points: this.points, border: borderSize);
   }
-
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -92,21 +90,23 @@ class CurveEditorState extends State<CurveEditor> {
 
           var pointIndex = 0;
           for (var point in points) {
-            var xPosition =
-                point.x * (constraints.maxWidth - 2 * borderSize) - widget.pointWidgetSize / 2 + borderSize;
+            var xPosition = point.x * (constraints.maxWidth - 2 * borderSize) -
+                widget.pointWidgetSize / 2 +
+                borderSize;
 
             stackedWidgets.add(Positioned(
                 left: xPosition,
                 top: (constraints.maxHeight - 2 * borderSize) -
                     point.y * (constraints.maxHeight - 2 * borderSize) -
-                    widget.pointWidgetSize / 2 +  borderSize,
+                    widget.pointWidgetSize / 2 +
+                    borderSize,
                 child: buildGestureDetector(pointIndex++, constraints)));
           }
 
           // add gesture detector for adding new points
           stackedWidgets.add(Positioned.fill(child: GestureDetector(
             onTapUp: (TapUpDetails details) {
-              RenderBox getBox = context.findRenderObject();
+              RenderBox getBox = context.findRenderObject() as RenderBox;
               Offset localOffset = getBox.globalToLocal(details.globalPosition);
 
               // only add if no point is within 4*r=2*pointWidgetSize
@@ -114,10 +114,14 @@ class CurveEditorState extends State<CurveEditor> {
 
               if (points.length <= maxPoints) {
                 setState(() {
-                  points.insert(1, Point2D(
-                      (localOffset.dx - borderSize) / (constraints.maxWidth - 2 * borderSize),
-                      ((constraints.maxHeight - 2 * borderSize) - (localOffset.dy - borderSize)) /
-                          (constraints.maxHeight - 2 * borderSize)));
+                  points.insert(
+                      1,
+                      Point2D(
+                          (localOffset.dx - borderSize) /
+                              (constraints.maxWidth - 2 * borderSize),
+                          ((constraints.maxHeight - 2 * borderSize) -
+                                  (localOffset.dy - borderSize)) /
+                              (constraints.maxHeight - 2 * borderSize)));
                   updatePoints();
                 });
               } else if (points.length >= maxPoints && !pointTapped) {
@@ -135,14 +139,14 @@ class CurveEditorState extends State<CurveEditor> {
         }));
   }
 
-  Widget buildGestureDetector(
-      int pointIndex, BoxConstraints constraints) {
-
+  Widget buildGestureDetector(int pointIndex, BoxConstraints constraints) {
     return RawGestureDetector(
       child: Container(
           width: widget.pointWidgetSize,
           height: widget.pointWidgetSize,
-          child: isFixed(pointIndex) ? widget.startingPointWidget : widget.pointWidget),
+          child: isFixed(pointIndex)
+              ? widget.startingPointWidget
+              : widget.pointWidget),
       gestures: <Type, GestureRecognizerFactory>{
         CustomPanGestureRecognizer:
             GestureRecognizerFactoryWithHandlers<CustomPanGestureRecognizer>(
@@ -154,11 +158,14 @@ class CurveEditorState extends State<CurveEditor> {
                   var dx = isFixed(pointIndex) ? 0 : details.delta.dx;
                   var dy = details.delta.dy;
 
-                  var newX = (point.x * (constraints.maxWidth - 2 * borderSize) + dx) /
-                      (constraints.maxWidth - 2 * borderSize);
+                  var newX =
+                      (point.x * (constraints.maxWidth - 2 * borderSize) + dx) /
+                          (constraints.maxWidth - 2 * borderSize);
 
-                  var newY = (point.y * (constraints.maxHeight - 2 * borderSize) - dy) /
-                      (constraints.maxHeight - 2 * borderSize);
+                  var newY =
+                      (point.y * (constraints.maxHeight - 2 * borderSize) -
+                              dy) /
+                          (constraints.maxHeight - 2 * borderSize);
 
                   if (-widget.pointWidgetSize / 2 <= newX &&
                       newX <= 1 + widget.pointWidgetSize / 2 &&
@@ -207,7 +214,7 @@ class CurveEditorState extends State<CurveEditor> {
     curveHolder.update(points);
     painter.updatePoints(points);
     if (null != widget.onChanged) {
-      widget.onChanged(points);
+      widget.onChanged!(points);
     }
   }
 
@@ -226,15 +233,15 @@ class CustomPanGestureRecognizer extends OneSequenceGestureRecognizer {
   final Function onPanUpdate;
   final Function onPanEnd;
   final Function onTap;
-  double len;
+  double len = 0.0;
 
-  Offset _startPanPosition;
+  Offset? _startPanPosition;
 
   CustomPanGestureRecognizer(
-      {@required this.onPanDown,
-      @required this.onPanUpdate,
-      @required this.onPanEnd,
-      @required this.onTap});
+      {required this.onPanDown,
+      required this.onPanUpdate,
+      required this.onPanEnd,
+      required this.onTap});
 
   @override
   void addPointer(PointerEvent event) {
@@ -251,8 +258,8 @@ class CustomPanGestureRecognizer extends OneSequenceGestureRecognizer {
   @override
   void handleEvent(PointerEvent event) {
     if (event is PointerMoveEvent) {
-      var dx = event.position.dx - _startPanPosition.dx;
-      var dy = event.position.dy - _startPanPosition.dy;
+      var dx = event.position.dx - (_startPanPosition?.dx ?? 0);
+      var dy = event.position.dy - (_startPanPosition?.dy ?? 0);
       len += sqrt(dx * dx + dy * dy);
       onPanUpdate(event);
     }
